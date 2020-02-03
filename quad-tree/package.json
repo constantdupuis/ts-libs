@@ -1,0 +1,32 @@
+{
+  "name": "quad-tree",
+  "version": "0.1.0",
+  "description": "QuadTree imlementation in TypeScript based on Coding Train videos.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "run-p start-compile start-run",
+    "start-compile": "tsc --watch",
+    "start-run": "browser-sync start --server -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/constantdupuis/ts-libs.git"
+  },
+  "keywords": [
+    "QuadTree",
+    "TS",
+    "TypeScript"
+  ],
+  "author": "Constant Dupuis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/constantdupuis/ts-libs/issues"
+  },
+  "homepage": "https://github.com/constantdupuis/ts-libs#readme",
+  "devDependencies": {
+    "@types/p5": "^0.9.0",
+    "browser-sync": "^2.26.7",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^3.7.5"
+  }
+}
