@@ -4,7 +4,11 @@
 class Point {
   x: number;
   y: number;
-
+  /**
+   * Create a new point
+   * @param x x coordinat of the point
+   * @param y y coordinat of the point
+   */
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
@@ -19,7 +23,13 @@ class Rectangle {
   y: number;
   w: number;
   h: number;
-
+/**
+ * Create new Rectangle
+ * @param x topleft x coordinate of the rectangle
+ * @param y topleft y coordinate of the rectangle
+ * @param w width of the rectangle
+ * @param h height of the rectangle
+ */
   constructor(x: number, y: number, w: number, h: number) {
     this.x = x;
     this.y = y;
@@ -27,6 +37,10 @@ class Rectangle {
     this.h = h;
   }
 
+  /**
+   * Check if a point in inside the rectangle, borders included
+   * @param p Point to check
+   */
   contains(p: Point): boolean {
     if (
       p.x >= this.x &&
@@ -37,6 +51,22 @@ class Rectangle {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Check if r intersects with this rectangle
+   * @param r Rectangle to check intersection with
+   */
+  intersects( r:Rectangle) : boolean
+  {
+    if( r.x > this.x + this.w || 
+      r.y > this.y + this.h || 
+      r.x + r.w < this.x ||
+      r.y + r.h < this.y) 
+    {
+      return false;
+    }
+    return true;
   }
 }
 
@@ -49,6 +79,8 @@ type cbBoundaries = (r: Rectangle) => void;
 
 /**
  * QuadTree object
+ * Implements QuadTree algorythm https://en.wikipedia.org/wiki/Quadtree
+ * Here to quickly found point in a given area (range) 
  */
 class QuadTree {
   boundary: Rectangle;
@@ -96,10 +128,52 @@ class QuadTree {
         return true;
       }
       else{
-        console.log("Should never get here !");
+        throw "Should never get here!";
       }
     }
     return false;
+  }
+
+  /**
+   * Query for points in a given area
+   * @param range Area to look for points 
+   */
+  query(range:Rectangle) : Point[]
+  { 
+    let found : Point [] = [];
+    return this.innerQuery(range, found);
+  }
+
+  /**
+   * Inner recursive query for points in a given area
+   * @param range Area to look for points
+   * @param found Array of points to fill with founded point, if null a array will be created
+   */
+  private innerQuery(range: Rectangle, found : Point[]) : Point[]
+  {
+    if( found == null)
+    {
+      found = [];
+    }
+
+    if( !this.boundary.intersects(range)) return found;
+
+    this.points.forEach((p:Point) =>{
+      if( range.contains(p))
+      {
+        found.push(p);
+      }
+    });
+
+    if( this.subdivided)
+    {
+      this.topLeft.innerQuery( range, found);
+      this.topRight.innerQuery( range, found);
+      this.bottomLeft.innerQuery( range, found)
+      this.bottomRight.innerQuery( range, found);
+    }
+   
+    return found;
   }
 
   /**
@@ -142,7 +216,7 @@ class QuadTree {
    * @param callback Function called for each QuadTree from this QuadTree node
    */
   forEach(callback: cbQuadTree) {
-    this.visiteQuadTree(this, callback);
+    this.visiteALlQuadTree(this, callback);
   }
 
   /**
@@ -151,7 +225,7 @@ class QuadTree {
    * @param callback function call for each point, with the point as parameter
    */
   forEachPoints(callback: cbPoints) {
-    this.visitePoints(this, callback);
+    this.visiteAllPoints(this, callback);
   }
 
   /**
@@ -159,7 +233,7 @@ class QuadTree {
    * @param callback function called for each QuadTree boundary
    */
   forEachBoundaries(callback: cbBoundaries) {
-    this.visiteBoundaries(this, callback);
+    this.visiteAllBoundaries(this, callback);
   }
 
 
@@ -168,16 +242,16 @@ class QuadTree {
    * @param qtree QuadTree node to start visite from
    * @param callback Function to call with each QuadTree as parameter
    */
-  private visiteQuadTree( qtree: QuadTree, callback: cbQuadTree)
+  private visiteALlQuadTree( qtree: QuadTree, callback: cbQuadTree)
   {
     if (qtree == null) return;
 
     callback(qtree);
     
-    this.visiteQuadTree(qtree.topLeft, callback);
-    this.visiteQuadTree(qtree.topRight, callback);
-    this.visiteQuadTree(qtree.bottomLeft, callback);
-    this.visiteQuadTree(qtree.bottomRight, callback);
+    this.visiteALlQuadTree(qtree.topLeft, callback);
+    this.visiteALlQuadTree(qtree.topRight, callback);
+    this.visiteALlQuadTree(qtree.bottomLeft, callback);
+    this.visiteALlQuadTree(qtree.bottomRight, callback);
   }
 
   /**
@@ -185,7 +259,7 @@ class QuadTree {
    * @param qtree QuadTree node to start visite from 
    * @param callback Function to call with each Point as parameter
    */
-  private visitePoints( qtree : QuadTree, callback: cbPoints)
+  private visiteAllPoints( qtree : QuadTree, callback: cbPoints)
   {
     if (qtree == null) return;
 
@@ -193,10 +267,10 @@ class QuadTree {
       callback(point);
     });
     
-    this.visitePoints(qtree.topLeft, callback);
-    this.visitePoints(qtree.topRight, callback);
-    this.visitePoints(qtree.bottomLeft, callback);
-    this.visitePoints(qtree.bottomRight, callback);
+    this.visiteAllPoints(qtree.topLeft, callback);
+    this.visiteAllPoints(qtree.topRight, callback);
+    this.visiteAllPoints(qtree.bottomLeft, callback);
+    this.visiteAllPoints(qtree.bottomRight, callback);
   }
 
   /**
@@ -204,16 +278,16 @@ class QuadTree {
    * @param qtree QuadTree node to start visite from
    * @param callback Funcion to call with each Boundary as parameter 
    */
-  private visiteBoundaries( qtree: QuadTree, callback: cbBoundaries)
+  private visiteAllBoundaries( qtree: QuadTree, callback: cbBoundaries)
   {
     if (qtree == null) return;
 
     callback(qtree.boundary);
         
-    this.visiteBoundaries(qtree.topLeft, callback);
-    this.visiteBoundaries(qtree.topRight, callback);
-    this.visiteBoundaries(qtree.bottomLeft, callback);
-    this.visiteBoundaries(qtree.bottomRight, callback);
+    this.visiteAllBoundaries(qtree.topLeft, callback);
+    this.visiteAllBoundaries(qtree.topRight, callback);
+    this.visiteAllBoundaries(qtree.bottomLeft, callback);
+    this.visiteAllBoundaries(qtree.bottomRight, callback);
   }
 
 }

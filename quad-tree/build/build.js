@@ -20,6 +20,15 @@ class Rectangle {
         }
         return false;
     }
+    intersects(r) {
+        if (r.x > this.x + this.w ||
+            r.y > this.y + this.h ||
+            r.x + r.w < this.x ||
+            r.y + r.h < this.y) {
+            return false;
+        }
+        return true;
+    }
 }
 class QuadTree {
     constructor(boundary, capacity) {
@@ -56,10 +65,33 @@ class QuadTree {
                 return true;
             }
             else {
-                console.log("Should never get here !");
+                throw "Should never get here!";
             }
         }
         return false;
+    }
+    query(range) {
+        let found = [];
+        return this.innerQuery(range, found);
+    }
+    innerQuery(range, found) {
+        if (found == null) {
+            found = [];
+        }
+        if (!this.boundary.intersects(range))
+            return found;
+        this.points.forEach((p) => {
+            if (range.contains(p)) {
+                found.push(p);
+            }
+        });
+        if (this.subdivided) {
+            this.topLeft.innerQuery(range, found);
+            this.topRight.innerQuery(range, found);
+            this.bottomLeft.innerQuery(range, found);
+            this.bottomRight.innerQuery(range, found);
+        }
+        return found;
     }
     subdivide() {
         if (!this.subdivided) {
@@ -75,69 +107,81 @@ class QuadTree {
         }
     }
     forEach(callback) {
-        this.visiteQuadTree(this, callback);
+        this.visiteALlQuadTree(this, callback);
     }
     forEachPoints(callback) {
-        this.visitePoints(this, callback);
+        this.visiteAllPoints(this, callback);
     }
     forEachBoundaries(callback) {
-        this.visiteBoundaries(this, callback);
+        this.visiteAllBoundaries(this, callback);
     }
-    visiteQuadTree(qtree, callback) {
+    visiteALlQuadTree(qtree, callback) {
         if (qtree == null)
             return;
         callback(qtree);
-        this.visiteQuadTree(qtree.topLeft, callback);
-        this.visiteQuadTree(qtree.topRight, callback);
-        this.visiteQuadTree(qtree.bottomLeft, callback);
-        this.visiteQuadTree(qtree.bottomRight, callback);
+        this.visiteALlQuadTree(qtree.topLeft, callback);
+        this.visiteALlQuadTree(qtree.topRight, callback);
+        this.visiteALlQuadTree(qtree.bottomLeft, callback);
+        this.visiteALlQuadTree(qtree.bottomRight, callback);
     }
-    visitePoints(qtree, callback) {
+    visiteAllPoints(qtree, callback) {
         if (qtree == null)
             return;
         qtree.points.forEach(point => {
             callback(point);
         });
-        this.visitePoints(qtree.topLeft, callback);
-        this.visitePoints(qtree.topRight, callback);
-        this.visitePoints(qtree.bottomLeft, callback);
-        this.visitePoints(qtree.bottomRight, callback);
+        this.visiteAllPoints(qtree.topLeft, callback);
+        this.visiteAllPoints(qtree.topRight, callback);
+        this.visiteAllPoints(qtree.bottomLeft, callback);
+        this.visiteAllPoints(qtree.bottomRight, callback);
     }
-    visiteBoundaries(qtree, callback) {
+    visiteAllBoundaries(qtree, callback) {
         if (qtree == null)
             return;
         callback(qtree.boundary);
-        this.visiteBoundaries(qtree.topLeft, callback);
-        this.visiteBoundaries(qtree.topRight, callback);
-        this.visiteBoundaries(qtree.bottomLeft, callback);
-        this.visiteBoundaries(qtree.bottomRight, callback);
+        this.visiteAllBoundaries(qtree.topLeft, callback);
+        this.visiteAllBoundaries(qtree.topRight, callback);
+        this.visiteAllBoundaries(qtree.bottomLeft, callback);
+        this.visiteAllBoundaries(qtree.bottomRight, callback);
     }
 }
 let qtree;
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    background(45, 33, 46);
-    qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 4);
+    background('#2D142C');
+    qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 8);
     console.log(qtree);
 }
 function draw() {
-    background('#3B8183');
-    if (mouseIsPressed) {
-        if (mouseButton === LEFT) {
-            qtree.insert(new Point(mouseX, mouseY));
-        }
-        else if (mouseButton === RIGHT) {
-        }
-    }
+    background('#2D142C');
     qtree.forEach((e) => {
-        stroke('#FF9C5B');
+        rectMode(CORNER);
+        stroke('#801336');
         noFill();
         rect(e.boundary.x, e.boundary.y, e.boundary.w, e.boundary.h);
         e.points.forEach((e) => {
-            stroke('#ED303C');
-            fill('#ED303C');
+            stroke('#C92A42');
+            fill('#C92A42');
             circle(e.x, e.y, 5);
         });
     });
+    if (mouseIsPressed === true && mouseButton === RIGHT) {
+        rectMode(CORNER);
+        let range = new Rectangle(mouseX - 40, mouseY - 20, 80, 40);
+        stroke('#EE4540');
+        noFill();
+        rect(range.x, range.y, range.w, range.h);
+        let found = qtree.query(range);
+        found.forEach((p) => {
+            stroke('#8FB9A8');
+            fill('#8FB9A8');
+            circle(p.x, p.y, 5);
+        });
+    }
+    else if (mouseIsPressed === true && mouseButton === LEFT) {
+        for (let i = 0; i < 5; i++) {
+            qtree.insert(new Point(mouseX + random(-5, 5), mouseY + random(-5, 5)));
+        }
+    }
 }
 //# sourceMappingURL=build.js.map
