@@ -15,7 +15,7 @@ class Rectangle {
         if (p.x >= this.x &&
             p.x <= this.x + this.w &&
             p.y >= this.y &&
-            p.y <= this.x + this.h) {
+            p.y <= this.y + this.h) {
             return true;
         }
         return false;
@@ -54,6 +54,9 @@ class QuadTree {
             }
             else if (this.bottomRight.insert(p)) {
                 return true;
+            }
+            else {
+                console.log("Should never get here !");
             }
         }
         return false;
@@ -110,29 +113,31 @@ class QuadTree {
         this.visiteBoundaries(qtree.bottomRight, callback);
     }
 }
+let qtree;
 function setup() {
     createCanvas(windowWidth, windowHeight);
     background(45, 33, 46);
-    let qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 4);
+    qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 4);
     console.log(qtree);
-    for (let i = 0; i < 100; i++) {
-        let p = new Point(random(windowWidth), random(windowHeight));
-        qtree.insert(p);
+}
+function draw() {
+    background('#3B8183');
+    if (mouseIsPressed) {
+        if (mouseButton === LEFT) {
+            qtree.insert(new Point(mouseX, mouseY));
+        }
+        else if (mouseButton === RIGHT) {
+        }
     }
     qtree.forEach((e) => {
-        stroke('red');
+        stroke('#FF9C5B');
         noFill();
         rect(e.boundary.x, e.boundary.y, e.boundary.w, e.boundary.h);
         e.points.forEach((e) => {
-            stroke('white');
-            fill('whitte');
+            stroke('#ED303C');
+            fill('#ED303C');
             circle(e.x, e.y, 5);
         });
     });
-    noLoop();
-}
-function draw() {
-    noStroke();
-    circle(10, 10, 5);
 }
 //# sourceMappingURL=build.js.map

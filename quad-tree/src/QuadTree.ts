@@ -32,7 +32,7 @@ class Rectangle {
       p.x >= this.x &&
       p.x <= this.x + this.w &&
       p.y >= this.y &&
-      p.y <= this.x + this.h
+      p.y <= this.y + this.h
     ) {
       return true;
     }
@@ -83,7 +83,9 @@ class QuadTree {
       this.points.push(p);
       return true;
     } else {
+
       this.subdivide();
+
       if (this.topLeft.insert(p)) {
         return true;
       } else if (this.topRight.insert(p)) {
@@ -92,6 +94,9 @@ class QuadTree {
         return true;
       } else if (this.bottomRight.insert(p)) {
         return true;
+      }
+      else{
+        console.log("Should never get here !");
       }
     }
     return false;
