@@ -26,10 +26,10 @@ class QuadTree {
         this.capacity = 4;
         this.points = [];
         this.subdivided = false;
-        this.northWest = null;
-        this.northEast = null;
-        this.southWest = null;
-        this.southEast = null;
+        this.topLeft = null;
+        this.topRight = null;
+        this.bottomLeft = null;
+        this.bottomRight = null;
         this.boundary = boundary;
         this.capacity = capacity;
     }
@@ -43,16 +43,16 @@ class QuadTree {
         }
         else {
             this.subdivide();
-            if (this.northWest.insert(p)) {
+            if (this.topLeft.insert(p)) {
                 return true;
             }
-            else if (this.northEast.insert(p)) {
+            else if (this.topRight.insert(p)) {
                 return true;
             }
-            else if (this.southWest.insert(p)) {
+            else if (this.bottomLeft.insert(p)) {
                 return true;
             }
-            else if (this.southEast.insert(p)) {
+            else if (this.bottomRight.insert(p)) {
                 return true;
             }
         }
@@ -65,53 +65,71 @@ class QuadTree {
             let y = this.boundary.y;
             let newWidth = this.boundary.w / 2.0;
             let newHeight = this.boundary.h / 2.0;
-            this.northWest = new QuadTree(new Rectangle(x, y, newWidth, newHeight), this.capacity);
-            this.northEast = new QuadTree(new Rectangle(x + newHeight, y, newWidth, newHeight), this.capacity);
-            this.southWest = new QuadTree(new Rectangle(x, y + newHeight, newWidth, newHeight), this.capacity);
-            this.southEast = new QuadTree(new Rectangle(x + newWidth, y + newHeight, newWidth, newHeight), this.capacity);
+            this.topLeft = new QuadTree(new Rectangle(x, y, newWidth, newHeight), this.capacity);
+            this.topRight = new QuadTree(new Rectangle(x + newWidth, y, newWidth, newHeight), this.capacity);
+            this.bottomLeft = new QuadTree(new Rectangle(x, y + newHeight, newWidth, newHeight), this.capacity);
+            this.bottomRight = new QuadTree(new Rectangle(x + newWidth, y + newHeight, newWidth, newHeight), this.capacity);
         }
     }
     forEach(callback) {
-        this.visite(this, callback, null, null);
+        this.visiteQuadTree(this, callback);
     }
     forEachPoints(callback) {
-        this.visite(this, null, callback, null);
+        this.visitePoints(this, callback);
     }
     forEachBoundaries(callback) {
-        this.visite(this, null, null, callback);
+        this.visiteBoundaries(this, callback);
     }
-    visite(qtree, cbQuadTrees, cbPoints, cbBoundaries) {
+    visiteQuadTree(qtree, callback) {
         if (qtree == null)
             return;
-        if (cbQuadTrees != null) {
-            cbQuadTrees(qtree);
-        }
-        if (cbPoints != null) {
-            qtree.points.forEach(e => {
-                cbPoints(e);
-            });
-        }
-        if (cbBoundaries != null) {
-            cbBoundaries(qtree.boundary);
-        }
-        this.visite(qtree.northWest, cbQuadTrees, cbPoints, cbBoundaries);
-        this.visite(qtree.northEast, cbQuadTrees, cbPoints, cbBoundaries);
-        this.visite(qtree.southWest, cbQuadTrees, cbPoints, cbBoundaries);
-        this.visite(qtree.southEast, cbQuadTrees, cbPoints, cbBoundaries);
+        callback(qtree);
+        this.visiteQuadTree(qtree.topLeft, callback);
+        this.visiteQuadTree(qtree.topRight, callback);
+        this.visiteQuadTree(qtree.bottomLeft, callback);
+        this.visiteQuadTree(qtree.bottomRight, callback);
+    }
+    visitePoints(qtree, callback) {
+        if (qtree == null)
+            return;
+        qtree.points.forEach(point => {
+            callback(point);
+        });
+        this.visitePoints(qtree.topLeft, callback);
+        this.visitePoints(qtree.topRight, callback);
+        this.visitePoints(qtree.bottomLeft, callback);
+        this.visitePoints(qtree.bottomRight, callback);
+    }
+    visiteBoundaries(qtree, callback) {
+        if (qtree == null)
+            return;
+        callback(qtree.boundary);
+        this.visiteBoundaries(qtree.topLeft, callback);
+        this.visiteBoundaries(qtree.topRight, callback);
+        this.visiteBoundaries(qtree.bottomLeft, callback);
+        this.visiteBoundaries(qtree.bottomRight, callback);
     }
 }
 function setup() {
     createCanvas(windowWidth, windowHeight);
     background(45, 33, 46);
-    let qtree = new QuadTree(new Rectangle(0, 0, windowWidth, windowHeight), 4);
+    let qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 4);
     console.log(qtree);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 100; i++) {
         let p = new Point(random(windowWidth), random(windowHeight));
         qtree.insert(p);
     }
-    qtree.forEachBoundaries((e) => {
-        console.log(e);
+    qtree.forEach((e) => {
+        stroke('red');
+        noFill();
+        rect(e.boundary.x, e.boundary.y, e.boundary.w, e.boundary.h);
+        e.points.forEach((e) => {
+            stroke('white');
+            fill('whitte');
+            circle(e.x, e.y, 5);
+        });
     });
+    noLoop();
 }
 function draw() {
     noStroke();

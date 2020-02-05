@@ -55,10 +55,10 @@ class QuadTree {
   capacity: number = 4;
   points: Point[] = [];
   subdivided: boolean = false;
-  northWest: QuadTree = null;
-  northEast: QuadTree = null;
-  southWest: QuadTree = null;
-  southEast: QuadTree = null;
+  topLeft: QuadTree = null;
+  topRight: QuadTree = null;
+  bottomLeft: QuadTree = null;
+  bottomRight: QuadTree = null;
   /**
    * A QuadTree node, the first you create is the root one. Will create sub QuadTree nodes
    * if needed when you insert points.
@@ -84,13 +84,13 @@ class QuadTree {
       return true;
     } else {
       this.subdivide();
-      if (this.northWest.insert(p)) {
+      if (this.topLeft.insert(p)) {
         return true;
-      } else if (this.northEast.insert(p)) {
+      } else if (this.topRight.insert(p)) {
         return true;
-      } else if (this.southWest.insert(p)) {
+      } else if (this.bottomLeft.insert(p)) {
         return true;
-      } else if (this.southEast.insert(p)) {
+      } else if (this.bottomRight.insert(p)) {
         return true;
       }
     }
@@ -110,22 +110,22 @@ class QuadTree {
       let newWidth = this.boundary.w / 2.0;
       let newHeight = this.boundary.h / 2.0;
 
-      this.northWest = new QuadTree(
+      this.topLeft = new QuadTree(
         new Rectangle(x, y, newWidth, newHeight),
         this.capacity
       );
 
-      this.northEast = new QuadTree(
-        new Rectangle(x + newHeight, y, newWidth, newHeight),
+      this.topRight = new QuadTree(
+        new Rectangle(x + newWidth, y, newWidth, newHeight),
         this.capacity
       );
 
-      this.southWest = new QuadTree(
+      this.bottomLeft = new QuadTree(
         new Rectangle(x, y + newHeight, newWidth, newHeight),
         this.capacity
       );
 
-      this.southEast = new QuadTree(
+      this.bottomRight = new QuadTree(
         new Rectangle(x + newWidth, y + newHeight, newWidth, newHeight),
         this.capacity
       );
@@ -133,11 +133,11 @@ class QuadTree {
   }
 
   /**
-   *
+   * Call callback for each QuadTree from this QuadTree and his childrens
    * @param callback Function called for each QuadTree from this QuadTree node
    */
   forEach(callback: cbQuadTree) {
-    this.visite(this, callback, null, null);
+    this.visiteQuadTree(this, callback);
   }
 
   /**
@@ -146,49 +146,69 @@ class QuadTree {
    * @param callback function call for each point, with the point as parameter
    */
   forEachPoints(callback: cbPoints) {
-    this.visite(this, null, callback, null);
+    this.visitePoints(this, callback);
   }
 
   /**
-   *
+   * 
    * @param callback function called for each QuadTree boundary
    */
   forEachBoundaries(callback: cbBoundaries) {
-    this.visite(this, null, null, callback);
+    this.visiteBoundaries(this, callback);
+  }
+
+
+  /**
+   * Visite all QuadTree from the passed *qtree*
+   * @param qtree QuadTree node to start visite from
+   * @param callback Function to call with each QuadTree as parameter
+   */
+  private visiteQuadTree( qtree: QuadTree, callback: cbQuadTree)
+  {
+    if (qtree == null) return;
+
+    callback(qtree);
+    
+    this.visiteQuadTree(qtree.topLeft, callback);
+    this.visiteQuadTree(qtree.topRight, callback);
+    this.visiteQuadTree(qtree.bottomLeft, callback);
+    this.visiteQuadTree(qtree.bottomRight, callback);
   }
 
   /**
-   * Internally used visite method, allow recursive visite of QuadTree node from the qtree passed in parameter.
-   * @param qtree QuadTree to visite
-   * @param cbQuadTrees callback for QuadTree info, if null not called
-   * @param cbPoints callback for points info, if null not called
-   * @param cbBoundaries callback for boundaries info, if null not called
+   * Visit all poin from this QuadTree and all it's childrens
+   * @param qtree QuadTree node to start visite from 
+   * @param callback Function to call with each Point as parameter
    */
-  private visite(
-    qtree: QuadTree,
-    cbQuadTrees: cbQuadTree,
-    cbPoints: cbPoints,
-    cbBoundaries: cbBoundaries
-  ) {
+  private visitePoints( qtree : QuadTree, callback: cbPoints)
+  {
     if (qtree == null) return;
 
-    if (cbQuadTrees != null) {
-      cbQuadTrees(qtree);
-    }
-
-    if (cbPoints != null) {
-      qtree.points.forEach(e => {
-        cbPoints(e);
-      });
-    }
-
-    if (cbBoundaries != null) {
-      cbBoundaries(qtree.boundary);
-    }
-
-    this.visite(qtree.northWest, cbQuadTrees, cbPoints, cbBoundaries);
-    this.visite(qtree.northEast, cbQuadTrees, cbPoints, cbBoundaries);
-    this.visite(qtree.southWest, cbQuadTrees, cbPoints, cbBoundaries);
-    this.visite(qtree.southEast, cbQuadTrees, cbPoints, cbBoundaries);
+    qtree.points.forEach(point => {
+      callback(point);
+    });
+    
+    this.visitePoints(qtree.topLeft, callback);
+    this.visitePoints(qtree.topRight, callback);
+    this.visitePoints(qtree.bottomLeft, callback);
+    this.visitePoints(qtree.bottomRight, callback);
   }
+
+  /**
+   * 
+   * @param qtree QuadTree node to start visite from
+   * @param callback Funcion to call with each Boundary as parameter 
+   */
+  private visiteBoundaries( qtree: QuadTree, callback: cbBoundaries)
+  {
+    if (qtree == null) return;
+
+    callback(qtree.boundary);
+        
+    this.visiteBoundaries(qtree.topLeft, callback);
+    this.visiteBoundaries(qtree.topRight, callback);
+    this.visiteBoundaries(qtree.bottomLeft, callback);
+    this.visiteBoundaries(qtree.bottomRight, callback);
+  }
+
 }
