@@ -1,10 +1,4 @@
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-class Rectangle {
+class Boundary {
     constructor(x, y, w, h) {
         this.x = x;
         this.y = y;
@@ -32,8 +26,8 @@ class Rectangle {
 }
 class QuadTree {
     constructor(boundary, capacity) {
-        this.capacity = 4;
         this.points = [];
+        this.capacity = 4;
         this.subdivided = false;
         this.topLeft = null;
         this.topRight = null;
@@ -100,10 +94,10 @@ class QuadTree {
             let y = this.boundary.y;
             let newWidth = this.boundary.w / 2.0;
             let newHeight = this.boundary.h / 2.0;
-            this.topLeft = new QuadTree(new Rectangle(x, y, newWidth, newHeight), this.capacity);
-            this.topRight = new QuadTree(new Rectangle(x + newWidth, y, newWidth, newHeight), this.capacity);
-            this.bottomLeft = new QuadTree(new Rectangle(x, y + newHeight, newWidth, newHeight), this.capacity);
-            this.bottomRight = new QuadTree(new Rectangle(x + newWidth, y + newHeight, newWidth, newHeight), this.capacity);
+            this.topLeft = new QuadTree(new Boundary(x, y, newWidth, newHeight), this.capacity);
+            this.topRight = new QuadTree(new Boundary(x + newWidth, y, newWidth, newHeight), this.capacity);
+            this.bottomLeft = new QuadTree(new Boundary(x, y + newHeight, newWidth, newHeight), this.capacity);
+            this.bottomRight = new QuadTree(new Boundary(x + newWidth, y + newHeight, newWidth, newHeight), this.capacity);
         }
     }
     forEach(callback) {
@@ -145,42 +139,47 @@ class QuadTree {
         this.visiteAllBoundaries(qtree.bottomRight, callback);
     }
 }
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
 let qtree;
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    background('#2D142C');
-    qtree = new QuadTree(new Rectangle(20, 20, windowWidth - 40, windowHeight - 40), 8);
-    console.log(qtree);
+    background("#2D142C");
+    qtree = new QuadTree(new Boundary(20, 20, windowWidth - 40, windowHeight - 40), 8);
 }
 function draw() {
-    background('#2D142C');
+    background("#2D142C");
     qtree.forEach((e) => {
         rectMode(CORNER);
-        stroke('#801336');
+        stroke("#801336");
         noFill();
         rect(e.boundary.x, e.boundary.y, e.boundary.w, e.boundary.h);
         e.points.forEach((e) => {
-            stroke('#C92A42');
-            fill('#C92A42');
+            stroke("#C92A42");
+            fill("#C92A42");
             circle(e.x, e.y, 5);
         });
     });
     if (mouseIsPressed === true && mouseButton === RIGHT) {
         rectMode(CORNER);
-        let range = new Rectangle(mouseX - 40, mouseY - 20, 80, 40);
-        stroke('#EE4540');
+        let range = new Boundary(mouseX - 40, mouseY - 20, 80, 40);
+        stroke("#EE4540");
         noFill();
         rect(range.x, range.y, range.w, range.h);
         let found = qtree.query(range);
         found.forEach((p) => {
-            stroke('#8FB9A8');
-            fill('#8FB9A8');
+            stroke("#8FB9A8");
+            fill("#8FB9A8");
             circle(p.x, p.y, 5);
         });
     }
     else if (mouseIsPressed === true && mouseButton === LEFT) {
         for (let i = 0; i < 5; i++) {
-            qtree.insert(new Point(mouseX + random(-5, 5), mouseY + random(-5, 5)));
+            qtree.insert(new Particle(mouseX + random(-5, 5), mouseY + random(-5, 5)));
         }
     }
 }
