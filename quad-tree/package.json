@@ -25,7 +25,7 @@
   "homepage": "https://github.com/constantdupuis/ts-libs#readme",
   "devDependencies": {
     "@types/p5": "^0.9.0",
-    "browser-sync": "^2.26.7",
+    "browser-sync": "^2.27.10",
     "npm-run-all": "^4.1.5",
     "typescript": "^3.7.5"
   }
